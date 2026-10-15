@@ -248,7 +248,16 @@ VALUES
 ('c-2', 'Kementerian ESDM', '/clients/esdm.webp', 'Kementerian', TRUE),
 ('c-3', 'Kementerian Ketenagakerjaan RI', '/clients/kemnaker.webp', 'Kementerian', TRUE),
 ('c-4', 'Kementerian Investasi / BKPM', '/clients/bkpm.webp', 'Kementerian', TRUE),
-('c-5', 'Kementerian Kesehatan RI', '/clients/kemenkes.webp', 'Kementerian', TRUE)
+('c-5', 'Kementerian Kesehatan RI', '/clients/kemenkes.webp', 'Kementerian', TRUE),
+('c-6', 'Kementerian Dalam Negeri RI', '/clients/kemendagri.svg', 'Kementerian', TRUE),
+('c-7', 'Kementerian Kominfo RI', '/clients/kominfo.webp', 'Kementerian', TRUE),
+('c-8', 'Kementerian Perdagangan RI', '/clients/perdagangan.webp', 'Kementerian', TRUE),
+('c-9', 'Kementerian Koperasi dan UKM RI', '/clients/kemenkop.webp', 'Kementerian', TRUE),
+('c-10', 'Kementerian ATR/BPN', '/clients/atr-bpn.webp', 'Kementerian', TRUE),
+('c-11', 'PT Indonesia Power', '/clients/indonesia-power.webp', 'BUMN', TRUE),
+('c-12', 'Mahkamah Agung RI', '/clients/makamah-agung.webp', 'Lembaga', TRUE),
+('c-13', 'BPPT', '/clients/bppt.webp', 'Lembaga', TRUE),
+('c-14', 'BRIN', '/clients/brin.webp', 'Lembaga', TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 -- 7. Table: landing_page_data (Pengaturan Halaman Utama Web)
