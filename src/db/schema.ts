@@ -21,6 +21,7 @@ export const products = pgTable("products", {
   features: jsonb("features").$type<string[]>().default([]),
   tags: jsonb("tags").$type<string[]>().default([]),
   icon: varchar("icon", { length: 50 }).default("Package"),
+  image: text("image"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

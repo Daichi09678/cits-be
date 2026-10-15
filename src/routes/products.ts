@@ -96,6 +96,7 @@ export const productRoutes = new Elysia({ prefix: "/api/products" })
           features: body.features || [],
           tags: body.tags || [],
           icon: body.icon || "Package",
+          image: body.image || null,
           isActive: body.isActive ?? true,
           updatedAt: new Date(),
         })
@@ -116,6 +117,7 @@ export const productRoutes = new Elysia({ prefix: "/api/products" })
         features: t.Optional(t.Array(t.String())),
         tags: t.Optional(t.Array(t.String())),
         icon: t.Optional(t.String()),
+        image: t.Optional(t.String()),
         isActive: t.Optional(t.Boolean()),
       }),
       detail: {
@@ -157,6 +159,7 @@ export const productRoutes = new Elysia({ prefix: "/api/products" })
           features: t.Array(t.String()),
           tags: t.Array(t.String()),
           icon: t.String(),
+          image: t.String(),
           isActive: t.Boolean(),
         })
       ),
