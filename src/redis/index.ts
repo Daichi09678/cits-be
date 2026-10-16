@@ -2,30 +2,31 @@ import Redis from "ioredis";
 import { env } from "../config/env";
 
 export const redis = new Redis(env.REDIS_URL, {
-  maxRetriesPerRequest: 3,
+  maxRetriesPerRequest: 0,
+  enableOfflineQueue: false,
   retryStrategy(times) {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
+    if (times > 2) return null; // Stop retrying if Redis is not running
+    return 1000;
   },
-  lazyConnect: false,
+  lazyConnect: true,
 });
 
 redis.on("connect", () => {
   console.log("⚡ Connected to Redis successfully");
 });
 
-redis.on("error", (err) => {
-  console.warn("⚠️ Redis warning/error:", err.message);
+redis.on("error", () => {
+  // Silent fail-safe when Redis is offline (Postgres will handle direct data)
 });
 
-// Cache helpers
+// Cache helpers (fail-safe if Redis offline)
 export async function getCache<T>(key: string): Promise<T | null> {
   try {
+    if (redis.status !== "ready") return null;
     const data = await redis.get(key);
     if (!data) return null;
     return JSON.parse(data) as T;
-  } catch (e) {
-    console.error("Cache get error for key:", key, e);
+  } catch {
     return null;
   }
 }
@@ -36,20 +37,22 @@ export async function setCache(
   ttlSeconds: number = 300
 ): Promise<void> {
   try {
+    if (redis.status !== "ready") return;
     await redis.set(key, JSON.stringify(value), "EX", ttlSeconds);
-  } catch (e) {
-    console.error("Cache set error for key:", key, e);
+  } catch {
+    // Graceful skip
   }
 }
 
 export async function invalidateCache(pattern: string): Promise<void> {
   try {
+    if (redis.status !== "ready") return;
     const keys = await redis.keys(pattern);
     if (keys.length > 0) {
       await redis.del(...keys);
     }
-  } catch (e) {
-    console.error("Cache invalidation error:", pattern, e);
+  } catch {
+    // Graceful skip
   }
 }
 

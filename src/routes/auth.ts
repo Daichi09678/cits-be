@@ -31,12 +31,11 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
         )
         .limit(1);
 
-      if (!user || user.length === 0) {
+      const admin = user?.[0];
+      if (!admin) {
         set.status = 401;
         return { success: false, message: "Username/Email atau password salah." };
       }
-
-      const admin = user[0];
 
       // Verifikasi password (Bun.password atau fallback plain)
       let isMatch = false;
@@ -105,12 +104,11 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
         .where(eq(schema.adminUsers.id, payload.sub))
         .limit(1);
 
-      if (!user || user.length === 0) {
+      const admin = user?.[0];
+      if (!admin) {
         set.status = 404;
         return { success: false, message: "Pengguna tidak ditemukan." };
       }
-
-      const admin = user[0];
       return {
         success: true,
         user: {
