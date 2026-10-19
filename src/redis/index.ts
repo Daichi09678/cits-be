@@ -19,6 +19,9 @@ redis.on("error", () => {
   // Silent fail-safe when Redis is offline (Postgres will handle direct data)
 });
 
+// Trigger connection attempt
+redis.connect().catch(() => {});
+
 // Cache helpers (fail-safe if Redis offline)
 export async function getCache<T>(key: string): Promise<T | null> {
   try {

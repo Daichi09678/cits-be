@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS products (
     features JSONB DEFAULT '[]'::jsonb,
     tags JSONB DEFAULT '[]'::jsonb,
     icon VARCHAR(50) DEFAULT 'Package',
+    image TEXT,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
