@@ -48,6 +48,8 @@ export const contactMessages = pgTable("contact_messages", {
   email: varchar("email", { length: 150 }).notNull(),
   phone: varchar("phone", { length: 50 }).notNull(),
   serviceRequested: varchar("service_requested", { length: 150 }),
+  productId: text("product_id"),
+  productRequested: text("product_requested"),
   message: text("message").notNull(),
   status: varchar("status", { length: 50 }).default("unread"), // 'unread', 'read', 'replied'
   createdAt: timestamp("created_at").defaultNow(),

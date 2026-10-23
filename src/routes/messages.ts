@@ -94,7 +94,14 @@ export const messageRoutes = new Elysia({ prefix: "/api/messages" })
         };
       }
 
-      const id = `msg-${Date.now()}`;
+      const product = body.productId
+        ? (await db.select().from(schema.products).where(eq(schema.products.id, body.productId)).limit(1))[0]
+        : null;
+      if (body.productId && (!product || !product.isActive)) {
+        set.status = 400;
+        return { success: false, message: "Produk yang dipilih sudah tidak tersedia." };
+      }
+      const id = `msg-${crypto.randomUUID()}`;
       const inserted = await db
         .insert(schema.contactMessages)
         .values({
@@ -103,7 +110,9 @@ export const messageRoutes = new Elysia({ prefix: "/api/messages" })
           email: body.email.trim(),
           phone: body.phone.trim(),
           company: body.company.trim(),
-          serviceRequested: body.serviceRequested || "General Inquiry",
+          serviceRequested: body.serviceRequested || (product ? "Konsultasi Produk" : "Konsultasi Umum"),
+          productId: product?.id,
+          productRequested: product?.name,
           message: body.message.trim(),
           status: "unread",
           createdAt: new Date(),
@@ -130,6 +139,7 @@ export const messageRoutes = new Elysia({ prefix: "/api/messages" })
         phone: t.String({ minLength: 6 }),
         company: t.String({ minLength: 2 }),
         serviceRequested: t.Optional(t.String()),
+        productId: t.Optional(t.String({ maxLength: 200 })),
         message: t.String({ minLength: 5 }),
       }),
       detail: {
