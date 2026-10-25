@@ -11,6 +11,7 @@ import { contactRoutes } from "./routes/contact";
 import { clientRoutes } from "./routes/clients";
 import { uploadRoutes } from "./routes/uploads";
 import { landingRoutes } from "./routes/landing";
+import { checkDatabaseConnection } from "./db";
 
 const app = new Elysia()
   .use(
@@ -53,11 +54,16 @@ const app = new Elysia()
     status: "ok",
     docs: "/swagger",
   }))
-  .get("/health", () => ({
-    status: "healthy",
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-  }))
+  .get("/health", async ({ set }) => {
+    const database = await checkDatabaseConnection();
+    if (!database) set.status = 503;
+    return {
+      status: database ? "healthy" : "degraded",
+      database: database ? "connected" : "disconnected",
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+    };
+  })
   // API Modules
   .use(authRoutes)
   .use(landingRoutes)
