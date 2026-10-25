@@ -31,6 +31,7 @@ Backend service untuk portal CITS Indonesia berbasis Bun, Elysia.js, PostgreSQL,
    bun run dev
    ```
    Backend akan aktif di `http://localhost:3001` dengan dokumentasi Swagger di `http://localhost:3001/swagger`.
+   Endpoint `GET /health` juga menguji koneksi PostgreSQL secara langsung dan mengembalikan HTTP 503 jika database tidak dapat diakses.
 
 5. **Perintah Berguna Lainnya**:
    - `bun run docker:down` : Menghentikan container database
