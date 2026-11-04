@@ -1,4 +1,34 @@
 import { pgTable, varchar, text, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import type { TeamMemberInput } from "../types/team";
+
+export const internalAccounts = pgTable("internal_accounts", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  passwordSalt: text("password_salt").notNull(),
+  passwordAlgo: varchar("password_algo", { length: 20 }).notNull().default("scrypt"),
+  pageAccess: jsonb("page_access").$type<string[]>().notNull().default([]),
+  permissions: jsonb("permissions").$type<Record<string, string[]> | null>(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const adminCredentials = pgTable("admin_credentials", {
+  userId: text("user_id").primaryKey(),
+  passwordHash: text("password_hash").notNull(),
+  passwordSalt: text("password_salt").notNull(),
+  passwordAlgo: varchar("password_algo", { length: 20 }).notNull().default("scrypt"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Compatible with the team table already used by the frontend.
+export const teamMembers = pgTable("team_members", {
+  id: text("id").primaryKey(),
+  data: jsonb("data").$type<TeamMemberInput>().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
 
 // 1. Admin Users
 export const adminUsers = pgTable("admin_users", {

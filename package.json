@@ -11,7 +11,11 @@
     "docker:logs": "docker compose logs -f",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:migrate:team": "bun run src/db/migrate-team.ts",
+    "test:team": "bun test tests/team.test.ts",
+    "db:migrate:auth": "bun run src/db/migrate-auth.ts",
+    "test:auth": "bun test tests/auth.test.ts"
   },
   "dependencies": {
     "@elysiajs/bearer": "^1.4.4",

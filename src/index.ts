@@ -12,6 +12,7 @@ import { clientRoutes } from "./routes/clients";
 import { uploadRoutes } from "./routes/uploads";
 import { landingRoutes } from "./routes/landing";
 import { checkDatabaseConnection } from "./db";
+import { teamRoutes } from "./routes/team";
 
 const app = new Elysia()
   .use(
@@ -39,6 +40,7 @@ const app = new Elysia()
           { name: "Contact", description: "Informasi Kontak & Alamat Kantor" },
           { name: "Clients", description: "Mitra & Logo Instansi" },
           { name: "Uploads", description: "Media & Berkas" },
+          { name: "Team", description: "Anggota tim dan pengaturan tampil publik" },
         ],
       },
       path: "/swagger",
@@ -73,6 +75,7 @@ const app = new Elysia()
   .use(contactRoutes)
   .use(clientRoutes)
   .use(uploadRoutes)
+  .use(teamRoutes)
   .listen(env.PORT);
 
 console.log(

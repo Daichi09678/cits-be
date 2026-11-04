@@ -1,129 +1,93 @@
 import { Elysia, t } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { bearer } from "@elysiajs/bearer";
-import { eq, or } from "drizzle-orm";
-import { db, schema } from "../db";
 import { env } from "../config/env";
+import { authenticateAccount, resolveAccount } from "../auth/accounts";
 
 export const authRoutes = new Elysia({ prefix: "/api/auth" })
-  .use(
-    jwt({
-      name: "jwt",
-      secret: env.JWT_SECRET,
-    })
-  )
+  .use(jwt({ name: "jwt", secret: env.JWT_SECRET }))
   .use(bearer())
+  .onError(({ code, error, set }) => {
+    if (code === "UNKNOWN" || code === "INTERNAL_SERVER_ERROR") {
+      console.error("Authentication unavailable:", error.name);
+      set.status = 503;
+      return {
+        success: false,
+        message: "Layanan login belum tersedia. Silakan coba lagi.",
+      };
+    }
+  })
   .post(
     "/login",
     async ({ body, jwt, set }) => {
-      const { email, password } = body;
-      const input = email.toLowerCase().trim();
-
-      const user = await db
-        .select()
-        .from(schema.adminUsers)
-        .where(
-          or(
-            eq(schema.adminUsers.email, input),
-            eq(schema.adminUsers.name, input),
-            eq(schema.adminUsers.email, `${input}@cits.id`)
-          )
-        )
-        .limit(1);
-
-      const admin = user?.[0];
-      if (!admin) {
+      const account = await authenticateAccount(
+        body.email,
+        body.password,
+        body.title,
+      );
+      if (!account) {
         set.status = 401;
-        return { success: false, message: "Username/Email atau password salah." };
+        return {
+          success: false,
+          message: "Email/username, password, atau jenis akun tidak sesuai.",
+        };
       }
-
-      // Verifikasi password (Bun.password atau fallback plain)
-      let isMatch = false;
-      try {
-        isMatch = await Bun.password.verify(password, admin.passwordHash);
-      } catch {
-        isMatch = password === admin.passwordHash;
+      if (account === "inactive") {
+        set.status = 403;
+        return {
+          success: false,
+          message: "Akun admin sedang dinonaktifkan. Hubungi Super Admin.",
+        };
       }
-
-      if (!isMatch && (password === "admin" || password === "admin123")) {
-        isMatch = true;
-      }
-
-      if (!isMatch) {
-        set.status = 401;
-        return { success: false, message: "Username/Email atau password salah." };
-      }
-
       const token = await jwt.sign({
-        sub: admin.id,
-        email: admin.email,
-        role: admin.role,
+        sub: account.id,
+        email: account.email,
+        role: account.role,
+        accountType: account.accountType,
+        exp: Math.floor(Date.now() / 1000) + 8 * 60 * 60,
       });
-
-      return {
-        success: true,
-        message: "Login berhasil",
-        token,
-        user: {
-          id: admin.id,
-          name: admin.name,
-          email: admin.email,
-          role: admin.role,
-          avatar: admin.avatarUrl || "/avatars/admin.webp",
-        },
-      };
+      return { success: true, message: "Login berhasil", token, user: account };
     },
     {
       body: t.Object({
-        email: t.String(),
-        password: t.String(),
+        email: t.String({ minLength: 1, maxLength: 254 }),
+        password: t.String({ minLength: 1, maxLength: 1024 }),
+        title: t.Optional(
+          t.Union([t.Literal("Super Admin"), t.Literal("Admin")], {
+            description:
+              "Jenis akun: Super Admin atau Admin. Jika kosong, dideteksi dari database.",
+          }),
+        ),
       }),
-      detail: {
-        tags: ["Auth"],
-        summary: "Login administrator back office",
-      },
-    }
+      detail: { tags: ["Auth"], summary: "Login Super Admin atau Admin biasa" },
+    },
   )
   .get(
     "/me",
     async ({ bearer, jwt, set }) => {
-      if (!bearer) {
+      const denied = () => {
         set.status = 401;
-        return { success: false, message: "Akses ditolak. Token tidak ditemukan." };
-      }
-
-      const payload = (await jwt.verify(bearer)) as { sub?: string; email?: string } | false;
-      if (!payload || !payload.sub) {
-        set.status = 401;
-        return { success: false, message: "Sesi tidak valid atau telah berakhir." };
-      }
-
-      const user = await db
-        .select()
-        .from(schema.adminUsers)
-        .where(eq(schema.adminUsers.id, payload.sub))
-        .limit(1);
-
-      const admin = user?.[0];
-      if (!admin) {
-        set.status = 404;
-        return { success: false, message: "Pengguna tidak ditemukan." };
-      }
-      return {
-        success: true,
-        user: {
-          id: admin.id,
-          name: admin.name,
-          email: admin.email,
-          role: admin.role,
-          avatar: admin.avatarUrl || "/avatars/admin.webp",
-        },
+        return {
+          success: false,
+          message: "Sesi tidak valid atau telah berakhir.",
+        };
       };
+      if (!bearer) return denied();
+      let payload;
+      try {
+        payload = await jwt.verify(bearer);
+      } catch {
+        return denied();
+      }
+      if (!payload) return denied();
+      const account = await resolveAccount(payload);
+      if (!account) return denied();
+      return { success: true, user: account };
     },
     {
       detail: {
         tags: ["Auth"],
-        summary: "Mendapatkan data admin yang sedang login",
+        summary: "Data dan jenis akun admin yang sedang login",
       },
-    }
+    },
   );
